@@ -445,6 +445,50 @@ html,body{height:100%;background:var(--outer);font-family:'Inter',sans-serif;-we
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CATALOGUE FILTER + GRID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.filter-row{
+  display:flex;gap:8px;padding:4px 16px 2px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.filter-pill{
+  flex-shrink:0;padding:8px 18px;border-radius:20px;
+  border:1.5px solid var(--border2);background:var(--white);
+  font-size:13px;font-weight:600;color:var(--primary);
+  cursor:pointer;transition:all 150ms;white-space:nowrap;
+}
+.filter-pill.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.filter-pill:active{opacity:.7}
+
+.deals-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;padding:0 16px;
+}
+.deal-grid-card{
+  background:var(--white);border-radius:18px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.05);
+  overflow:hidden;cursor:pointer;position:relative;
+  transition:transform 120ms;
+}
+.deal-grid-card:active{transform:scale(0.98)}
+.deal-grid-img{
+  height:110px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:42px;user-select:none;position:relative;
+}
+.deal-grid-body{padding:10px 12px 38px}
+.deal-save-pill{
+  position:absolute;top:8px;left:8px;
+  background:var(--amber);color:#fff;
+  font-size:9px;font-weight:800;letter-spacing:.3px;
+  border-radius:8px;padding:3px 7px;pointer-events:none;
+}
+.deals-empty{
+  grid-column:1/-1;padding:32px 0;text-align:center;
+  font-size:14px;color:var(--muted);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MISC
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .gap-bottom{height:16px}
@@ -479,15 +523,18 @@ html,body{height:100%;background:var(--outer);font-family:'Inter',sans-serif;-we
       </div>
     </div>
 
-    <div class="section-head">
-      <span class="label">This week</span>
+    <!-- Store filter -->
+    <div class="filter-row" id="store-filter-row">
+      <div class="filter-pill active" data-filter="all" onclick="setStoreFilter(this)">All deals</div>
+      <div class="filter-pill" data-filter="woolworths" onclick="setStoreFilter(this)">Woolworths</div>
+      <div class="filter-pill" data-filter="coles" onclick="setStoreFilter(this)">Coles</div>
+      <div class="filter-pill" data-filter="aldi" onclick="setStoreFilter(this)">Aldi</div>
     </div>
-    <div class="h-scroll" id="home-deals-row"></div>
 
-    <div class="section-head" style="padding-top:28px">
-      <span class="label">On your list</span>
+    <div class="section-head">
+      <span class="label" id="deals-count-label">This week's deals</span>
     </div>
-    <div class="h-scroll" id="home-list-row"></div>
+    <div class="deals-grid" id="home-deals-grid"></div>
     <div class="gap-bottom"></div>
   </div>
 
@@ -823,12 +870,9 @@ async function loadLiveData() {
 
     if (allProducts.length === 0) throw new Error('Empty product list');
 
-    // Sort by saving percent descending for the deals row
+    // Sort best deals first — all products go into the scrollable grid
     const sorted = [...allProducts].sort((a, b) => b.savingPercent - a.savingPercent);
-    deals = sorted.slice(0, 12).map(scraperProductToCard);
-    // Show non-discounted items in the "on your list" row (or lower-saving items)
-    listItems = sorted.slice(12, 20).map(scraperProductToCard);
-    if (listItems.length === 0) listItems = sorted.slice(0, 5).map(scraperProductToCard);
+    deals = sorted.map(scraperProductToCard);
 
     // Show live badge and last-updated text
     const badge = document.getElementById('live-badge');
@@ -895,6 +939,63 @@ function productCardHTML(d, idx){
 function renderRow(containerId, data){
   const el = document.getElementById(containerId);
   if(el) el.innerHTML = data.map((d,i)=>productCardHTML(d,i)).join('');
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CATALOGUE GRID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+let activeStoreFilter = 'all';
+
+function setStoreFilter(el){
+  document.querySelectorAll('#store-filter-row .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  activeStoreFilter = el.dataset.filter;
+  renderDealsGrid();
+}
+
+function dealGridCardHTML(d){
+  const imgContent = d.imgSrc
+    ? `<img src="${d.imgSrc}" alt="${d.n}" style="width:100%;height:100%;object-fit:contain;padding:8px" onerror="this.parentElement.innerHTML='${d.e||'🛒'}'">`
+    : (d.e || '🛒');
+  const wasDiff = d.was && d.was !== d.sale;
+  const savePct = wasDiff ? Math.round((1 - d.sale / d.was) * 100) : 0;
+  return `<div class="deal-grid-card">
+    <div class="deal-grid-img">
+      ${imgContent}
+      ${savePct >= 10 ? `<div class="deal-save-pill">${savePct}% off</div>` : ''}
+    </div>
+    <div class="deal-grid-body">
+      <div class="badge ${badgeClass(d.store)}">${badgeLabel(d.store)}</div>
+      <div class="p-name">${d.n}</div>
+      <div class="p-row">
+        ${wasDiff ? `<span class="p-was">$${d.was.toFixed(2)}</span>` : ''}
+        <span class="p-sale">$${d.sale.toFixed(2)}</span>
+      </div>
+      ${d.pts ? `<div class="p-pts">+ ${d.pts} pts</div>` : ''}
+    </div>
+    <button class="add-btn" onclick="addItem(this,'${d.n.replace(/'/g,"\\'")}',${d.pts},'${d.store}')">+</button>
+  </div>`;
+}
+
+function renderDealsGrid(){
+  const grid = document.getElementById('home-deals-grid');
+  if(!grid) return;
+
+  const filtered = activeStoreFilter === 'all'
+    ? deals
+    : deals.filter(d => d.store === activeStoreFilter);
+
+  const label = document.getElementById('deals-count-label');
+  if(label){
+    const store = activeStoreFilter === 'all' ? '' : ` · ${badgeLabel(activeStoreFilter)}`;
+    label.textContent = `${filtered.length} deal${filtered.length !== 1 ? 's' : ''} this week${store}`;
+  }
+
+  if(filtered.length === 0){
+    grid.innerHTML = `<div class="deals-empty">No deals found for this store</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(d => dealGridCardHTML(d)).join('');
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1173,8 +1274,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // Try to load live data first; falls back to dummy data if unavailable
   await loadLiveData();
 
-  renderRow('home-deals-row', deals);
-  renderRow('home-list-row', listItems);
+  renderDealsGrid();
 
   // Checkout buttons - attach store data attrs
   const btns = document.querySelectorAll('.checkout-btn');
