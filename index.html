@@ -423,6 +423,27 @@ html,body{height:100%;background:var(--outer);font-family:'Inter',sans-serif;-we
   font-size:11px;color:#C5C0B8;
 }
 
+/* ── Live prices badge ── */
+.live-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--green-bg);color:var(--green);
+  font-size:10px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;border-radius:20px;
+  padding:4px 10px;vertical-align:middle;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.85)}
+}
+.updated-text{
+  font-size:11px;color:var(--muted);margin-top:4px;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MISC
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -438,7 +459,13 @@ html,body{height:100%;background:var(--outer);font-family:'Inter',sans-serif;-we
   <!-- ══════════════ HOME ══════════════ -->
   <div class="tab active" id="tab-home">
     <div class="home-greeting serif-lg">Good morning, Flynn.</div>
-    <div class="home-sub">Here's your week.</div>
+    <div class="home-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      Here's your week.
+      <span class="live-badge" id="live-badge" style="display:none">
+        <span class="live-dot"></span>Live prices
+      </span>
+    </div>
+    <div class="updated-text" id="updated-text" style="padding:0 24px 4px;display:none"></div>
 
     <div class="savings-card card">
       <div class="savings-left">
@@ -713,9 +740,9 @@ html,body{height:100%;background:var(--outer);font-family:'Inter',sans-serif;-we
 
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   DATA
+   FALLBACK DATA (used if products.json fails to load)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const deals = [
+const FALLBACK_DEALS = [
   {e:'🥩',n:'Beef Mince Premium 500g',store:'woolworths',was:9.50,sale:6.00,pts:300,cat:'meat'},
   {e:'🥛',n:'Full Cream Milk 2L',store:'woolworths',was:3.80,sale:2.90,pts:145,cat:'dairy'},
   {e:'🍎',n:'Pink Lady Apples 1kg',store:'coles',was:5.50,sale:3.50,pts:175,cat:'produce'},
@@ -726,13 +753,99 @@ const deals = [
   {e:'🥚',n:'Free Range Eggs Dozen',store:'aldi',was:7.99,sale:5.99,pts:300,cat:'dairy'},
 ];
 
-const listItems = [
+const FALLBACK_LIST = [
   {e:'🍞',n:'Sourdough Loaf 700g',store:'coles',was:5.50,sale:4.00,pts:200,cat:'bakery'},
   {e:'🧴',n:'Argan Oil Shampoo 400ml',store:'aldi',was:7.99,sale:4.49,pts:225,cat:'other'},
   {e:'🧈',n:'Mainland Butter 250g',store:'woolworths',was:5.50,sale:3.90,pts:195,cat:'dairy'},
   {e:'🥕',n:'Carrots 1kg Bag',store:'woolworths',was:2.50,sale:1.50,pts:75,cat:'produce'},
   {e:'🍌',n:'Cavendish Bananas 1kg',store:'coles',was:3.00,sale:1.90,pts:95,cat:'produce'},
 ];
+
+// Live data — populated by loadLiveData()
+let deals = FALLBACK_DEALS;
+let listItems = FALLBACK_LIST;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CATEGORY EMOJI MAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const CATEGORY_EMOJI = {
+  meat: '🥩', dairy: '🥛', produce: '🥦', bakery: '🍞',
+  seafood: '🐟', frozen: '🧊', snacks: '🍪', drinks: '🧃',
+  pantry: '🫙', health: '💊', 'health & beauty': '🧴',
+  cleaning: '🧹', pet: '🐾', baby: '🍼', other: '🛒', general: '🛒',
+};
+
+function categoryEmoji(cat) {
+  const key = (cat || 'general').toLowerCase();
+  for (const [k, v] of Object.entries(CATEGORY_EMOJI)) {
+    if (key.includes(k)) return v;
+  }
+  return '🛒';
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LIVE DATA LOADER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function timeAgo(isoString) {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const mins = Math.floor(diff / 60000);
+  return mins > 0 ? `${mins} minute${mins > 1 ? 's' : ''} ago` : 'just now';
+}
+
+function scraperProductToCard(p) {
+  return {
+    e: p.imageUrl ? null : categoryEmoji(p.category),
+    imgSrc: p.imageUrl || null,
+    n: p.name,
+    store: p.store,
+    was: p.wasPrice || p.currentPrice,
+    sale: p.currentPrice,
+    pts: p.points || 0,
+    cat: (p.category || 'general').toLowerCase(),
+  };
+}
+
+async function loadLiveData() {
+  try {
+    const res = await fetch('products.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const allProducts = [
+      ...(data.stores?.woolworths?.products || []),
+      ...(data.stores?.coles?.products || []),
+      ...(data.stores?.aldi?.products || []),
+    ];
+
+    if (allProducts.length === 0) throw new Error('Empty product list');
+
+    // Sort by saving percent descending for the deals row
+    const sorted = [...allProducts].sort((a, b) => b.savingPercent - a.savingPercent);
+    deals = sorted.slice(0, 12).map(scraperProductToCard);
+    // Show non-discounted items in the "on your list" row (or lower-saving items)
+    listItems = sorted.slice(12, 20).map(scraperProductToCard);
+    if (listItems.length === 0) listItems = sorted.slice(0, 5).map(scraperProductToCard);
+
+    // Show live badge and last-updated text
+    const badge = document.getElementById('live-badge');
+    const updatedEl = document.getElementById('updated-text');
+    if (badge) badge.style.display = 'inline-flex';
+    if (updatedEl && data.lastUpdated) {
+      updatedEl.style.display = 'block';
+      updatedEl.textContent = `Prices updated ${timeAgo(data.lastUpdated)}`;
+    }
+
+    return true;
+  } catch (e) {
+    // Silently fall back to dummy data
+    console.info('products.json not loaded — using demo data:', e.message);
+    return false;
+  }
+}
 
 const sources = [
   {icon:'🍽️',name:'Taste.com.au',desc:'Australia\'s #1 recipe site',on:true},
@@ -760,18 +873,22 @@ function badgeLabel(store){
 }
 
 function productCardHTML(d, idx){
+  const imgContent = d.imgSrc
+    ? `<img src="${d.imgSrc}" alt="${d.n}" style="width:100%;height:100%;object-fit:contain;padding:8px" onerror="this.parentElement.textContent='${d.e||'🛒'}'">`
+    : (d.e || '🛒');
+  const wasDiff = d.was !== d.sale;
   return `<div class="product-card">
-    <div class="product-img">${d.e}</div>
+    <div class="product-img">${imgContent}</div>
     <div class="product-body">
       <div class="badge ${badgeClass(d.store)}">${badgeLabel(d.store)}</div>
       <div class="p-name">${d.n}</div>
       <div class="p-row">
-        <span class="p-was">$${d.was.toFixed(2)}</span>
+        ${wasDiff ? `<span class="p-was">$${d.was.toFixed(2)}</span>` : ''}
         <span class="p-sale">$${d.sale.toFixed(2)}</span>
       </div>
       ${d.pts?`<div class="p-pts">+ ${d.pts} pts</div>`:''}
     </div>
-    <button class="add-btn" onclick="addItem(this,'${d.n}',${d.pts},'${d.store}')">+</button>
+    <button class="add-btn" onclick="addItem(this,'${d.n.replace(/'/g,"\\'")}',${d.pts},'${d.store}')">+</button>
   </div>`;
 }
 
@@ -1052,7 +1169,10 @@ function updateSlider(el){
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INIT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // Try to load live data first; falls back to dummy data if unavailable
+  await loadLiveData();
+
   renderRow('home-deals-row', deals);
   renderRow('home-list-row', listItems);
 

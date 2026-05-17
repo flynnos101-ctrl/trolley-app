@@ -1,0 +1,208 @@
+{
+  "lastUpdated": "2026-05-17T00:00:00.000Z",
+  "stores": {
+    "woolworths": {
+      "scrapedAt": "2026-05-17T00:00:00.000Z",
+      "products": [
+        {
+          "id": "woolworths_a1b2c3d4",
+          "name": "Beef Mince Premium 500g",
+          "category": "Meat",
+          "currentPrice": 6.00,
+          "wasPrice": 9.50,
+          "saving": 3.50,
+          "savingPercent": 37,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 300
+        },
+        {
+          "id": "woolworths_b2c3d4e5",
+          "name": "Full Cream Milk 2L",
+          "category": "Dairy",
+          "currentPrice": 2.90,
+          "wasPrice": 3.80,
+          "saving": 0.90,
+          "savingPercent": 24,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 145
+        },
+        {
+          "id": "woolworths_c3d4e5f6",
+          "name": "Tasty Cheese Block 500g",
+          "category": "Dairy",
+          "currentPrice": 5.50,
+          "wasPrice": 8.00,
+          "saving": 2.50,
+          "savingPercent": 31,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 275
+        },
+        {
+          "id": "woolworths_d4e5f6g7",
+          "name": "Broccoli Head Large",
+          "category": "Produce",
+          "currentPrice": 2.00,
+          "wasPrice": 3.50,
+          "saving": 1.50,
+          "savingPercent": 43,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 100
+        },
+        {
+          "id": "woolworths_e5f6g7h8",
+          "name": "Chicken Thigh Fillets 1kg",
+          "category": "Meat",
+          "currentPrice": 7.50,
+          "wasPrice": 11.00,
+          "saving": 3.50,
+          "savingPercent": 32,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 375
+        },
+        {
+          "id": "woolworths_f6g7h8i9",
+          "name": "Mainland Butter 250g",
+          "category": "Dairy",
+          "currentPrice": 3.90,
+          "wasPrice": 5.50,
+          "saving": 1.60,
+          "savingPercent": 29,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 195
+        },
+        {
+          "id": "woolworths_g7h8i9j0",
+          "name": "Carrots 1kg Bag",
+          "category": "Produce",
+          "currentPrice": 1.50,
+          "wasPrice": 2.50,
+          "saving": 1.00,
+          "savingPercent": 40,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "woolworths",
+          "points": 75
+        }
+      ]
+    },
+    "coles": {
+      "scrapedAt": "2026-05-17T00:00:00.000Z",
+      "products": [
+        {
+          "id": "coles_a1b2c3d4",
+          "name": "Pink Lady Apples 1kg",
+          "category": "Produce",
+          "currentPrice": 3.50,
+          "wasPrice": 5.50,
+          "saving": 2.00,
+          "savingPercent": 36,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "coles",
+          "points": 35
+        },
+        {
+          "id": "coles_b2c3d4e5",
+          "name": "Blueberries Punnet 125g",
+          "category": "Produce",
+          "currentPrice": 3.00,
+          "wasPrice": 5.00,
+          "saving": 2.00,
+          "savingPercent": 40,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "coles",
+          "points": 150
+        },
+        {
+          "id": "coles_c3d4e5f6",
+          "name": "Sourdough Loaf 700g",
+          "category": "Bakery",
+          "currentPrice": 4.00,
+          "wasPrice": 5.50,
+          "saving": 1.50,
+          "savingPercent": 27,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "coles",
+          "points": 200
+        },
+        {
+          "id": "coles_d4e5f6g7",
+          "name": "Cavendish Bananas 1kg",
+          "category": "Produce",
+          "currentPrice": 1.90,
+          "wasPrice": 3.00,
+          "saving": 1.10,
+          "savingPercent": 37,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "coles",
+          "points": 95
+        }
+      ]
+    },
+    "aldi": {
+      "scrapedAt": "2026-05-17T00:00:00.000Z",
+      "products": [
+        {
+          "id": "aldi_a1b2c3d4",
+          "name": "Free Range Eggs Dozen",
+          "category": "Dairy",
+          "currentPrice": 5.99,
+          "wasPrice": null,
+          "saving": 0,
+          "savingPercent": 0,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "aldi",
+          "points": 0
+        },
+        {
+          "id": "aldi_b2c3d4e5",
+          "name": "Argan Oil Shampoo 400ml",
+          "category": "Health & Beauty",
+          "currentPrice": 4.49,
+          "wasPrice": null,
+          "saving": 0,
+          "savingPercent": 0,
+          "imageUrl": null,
+          "inStock": true,
+          "store": "aldi",
+          "points": 0
+        }
+      ]
+    }
+  },
+  "summary": {
+    "totalProducts": 13,
+    "totalWoolworths": 7,
+    "totalColes": 4,
+    "totalAldi": 2,
+    "bestDeal": {
+      "id": "woolworths_a1b2c3d4",
+      "name": "Beef Mince Premium 500g",
+      "category": "Meat",
+      "currentPrice": 6.00,
+      "wasPrice": 9.50,
+      "saving": 3.50,
+      "savingPercent": 37,
+      "imageUrl": null,
+      "inStock": true,
+      "store": "woolworths",
+      "points": 300
+    }
+  }
+}
