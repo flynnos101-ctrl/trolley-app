@@ -889,27 +889,9 @@ function DealsTab({ onProductSelect }: any) {
 function CompareTab({ listProducts, totalCheapest, totalWoolies, onTabChange }: any) {
   const savings = totalWoolies - totalCheapest;
 
-  if (listProducts.length === 0) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center space-y-8">
-        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-w-green animate-bounce-slow">
-          <Scale size={48} />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black tracking-tight">Basket Empty</h2>
-          <p className="text-text-secondary mt-2 max-w-[280px] mx-auto font-medium">Add items to your list to calculate the most efficient shopping route.</p>
-        </div>
-        <button
-          onClick={() => onTabChange('list')}
-          className="bg-w-green text-surface px-10 py-4 rounded-2xl font-black tracking-widest text-sm shadow-xl shadow-w-green/20 hover:scale-105 active:scale-95 transition-all uppercase"
-        >
-          Build Your List
-        </button>
-      </div>
-    );
-  }
-
   const split = useMemo(() => {
+    if (listProducts.length === 0) return [];
+
     const groups: Record<Store, Product[]> = {
       woolworths: [],
       coles: [],
@@ -930,6 +912,26 @@ function CompareTab({ listProducts, totalCheapest, totalWoolies, onTabChange }: 
         total: items.reduce((prev, curr) => prev + getStorePrice(curr, store), 0)
       }));
   }, [listProducts]);
+
+  if (listProducts.length === 0) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center space-y-8">
+        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-w-green animate-bounce-slow">
+          <Scale size={48} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-black tracking-tight">Basket Empty</h2>
+          <p className="text-text-secondary mt-2 max-w-[280px] mx-auto font-medium">Add items to your list to calculate the most efficient shopping route.</p>
+        </div>
+        <button
+          onClick={() => onTabChange('list')}
+          className="bg-w-green text-surface px-10 py-4 rounded-2xl font-black tracking-widest text-sm shadow-xl shadow-w-green/20 hover:scale-105 active:scale-95 transition-all uppercase"
+        >
+          Build Your List
+        </button>
+      </div>
+    );
+  }
 
   const shareSummary = () => {
     const text = `🛒 My Trolley split this week:\n` +
