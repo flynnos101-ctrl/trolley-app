@@ -1,0 +1,6 @@
+{
+  "name": "Trolley",
+  "description": "Australia's smartest grocery price comparison tool. Save on your weekly shop by comparing Woolies, Coles, Aldi, and IGA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
